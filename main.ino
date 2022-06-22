@@ -66,7 +66,7 @@ void loop()
       sensorValue = getMoistureSensorValue(sensorAddress);
     }
   }
-  // delay(pause);
+  delay(pause);
 }
 
 /*
@@ -107,21 +107,21 @@ The sensor value
 */
 bool isSensorInSoil(float sensorValue, float airValue)
 {
-  int percent = 0;
+  float percent = 0;
   if (airValue > sensorValue)
   {
-    int a = airValue - sensorValue;
-    int b = (airValue - sensorValue) / 2;
-    percent = (a / b) / 100;
+    float a = airValue - sensorValue;
+    float b = (airValue + sensorValue) / 2;
+    percent = (a / b) * 100.0;
   }
   else
   {
     int a = sensorValue - airValue;
-    int b = (sensorValue - airValue) / 2;
-    percent = (a / b) / 100;
+    int b = (sensorValue + airValue) / 2;
+    percent = (a / b) * 100;
   }
 
-  return percent > 10;
+  return percent > 10.0;
 }
 
 bool isSensorConnected(float sensorValue)
