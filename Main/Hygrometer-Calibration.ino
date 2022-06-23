@@ -8,11 +8,20 @@ It then prints out these values.
 These two values are needed for the main.ino to determine the correct moisture percentage.
 */
 
+
+#if defined(ARDUINO) && ARDUINO >= 100
+#include "Arduino.h"
+#else
+#include "WProgram.h"
+#endif
+
+
 /*
 Change this value to your analog input port you want to use
 */
 const byte sensorAddress = A0;
 
+/*
 void setup()
 {
     Serial.begin(9600);
@@ -39,6 +48,7 @@ void loop()
 /*
   Reads the moisture sensor 1000x and returning the average value
 */
+/*
 float getMoistureSensorValue(byte sensorPin)
 {
     float sensorValue = 0;
@@ -49,3 +59,4 @@ float getMoistureSensorValue(byte sensorPin)
     }
     return sensorValue / 1000.0;
 }
+*/
