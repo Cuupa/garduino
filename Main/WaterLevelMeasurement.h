@@ -1,4 +1,4 @@
-const bool enabled = true;
+const bool enabled = false;
 
 const int pingPin = 9;
 const int echoPin = 10;
