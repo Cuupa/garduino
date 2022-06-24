@@ -1,18 +1,13 @@
 /*
 
 */
+#include "Arduino.h"
 
 #include "Main.h"
 #include "Hygrometer.h"
 #include "Debug.h"
 #include "Pump.h"
 #include "PowerSaving.h"
-
-#if defined(ARDUINO) && ARDUINO >= 100      // #  https://github.com/adafruit/DHT-sensor-library/issues/1   changed 2015 Feb 21
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 
 int numberOfSensorPumpPairs = -1;
 
@@ -55,26 +50,41 @@ void loop()
 
     if (!isSensorInSoil(sensorValue, sensorIndex) || !isSensorConnected(sensorValue))
     {
+      debug("Sensor not in soil");
+      digitalWrite(2, HIGH);
       continue;
     }
 
-    int soilMoisturePercent = getSensorValueInPercent(sensorValue,sensorIndex);
+    debug("Sensor in soil");
+    digitalWrite(2, LOW);
 
+    int soilMoisturePercent = getSensorValueInPercent(sensorValue,sensorIndex);
+    debug(String(soilMoisturePercent));
     while (needsWatering(soilMoisturePercent))
     {
+     
       if (!isSensorInSoil(sensorValue, sensorIndex) || !isSensorConnected(sensorValue))
       {
-        continue;
+         debug("Sensor not in soil");
+        digitalWrite(2, HIGH);
+        break;
       }
+       digitalWrite(2, LOW);
+      debug("Needs water");
+      digitalWrite(3, HIGH);
       pump(2000, pumpAddress);
       sensorValue = getMoistureSensorValue(sensorAddress);
+      soilMoisturePercent = getSensorValueInPercent(sensorValue,sensorIndex);
+      debug(String(soilMoisturePercent));
     }
-  }
-  sleep(60);
-}
 
+    debug("Done watering");
+    digitalWrite(3, LOW);
+  }
+  //sleep(60);
+}
 
 bool needsWatering(float soilMoisturePercent)
 {
-  return soilMoisturePercent > HIGH_WATER_REQUIREMENTS;
+  return soilMoisturePercent < HIGH_WATER_REQUIREMENTS;
 }
