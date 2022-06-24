@@ -10,14 +10,19 @@ This is a board for prototyping. It'll be replaces by a arduino nano, when the h
 
 ## Elegoo electronic set 
 Be aware you need a seperate 9V power supply if you don't want to power the components via the arduino.
-[amazon](https://amzn.to/39TeAqW) ()
+
+[amazon](https://amzn.to/39TeAqW)
 
 ## WayinTop 3 3V-5V pumps 
-Not the best pumps, but rather cheap and used for prototyping
+Not the best pumps, but rather cheap and used for prototyping.
+
 [amazon](https://amzn.to/3OmWYmE)
 
-## Elegoo 4 channel 5V DC relais 
-Be aware that LOW seems to activate the relais instead of HIGH
+## Elegoo 4 channel 5V DC relay
+Be aware that LOW seems to activate the relay instead of HIGH. The code is written that way. If you use a different relay, you might want to change that. 
+
+Also see [Changes you probably have to make - Relay](#relay)
+
 [amazon](https://amzn.to/3NtVxl7)
 
 ## KeeYees capacitive hygrometers 
@@ -36,7 +41,7 @@ If you want to use the software for yourself feel free to change it to match you
 ## Changes you probably have to make
 
 
-### Sensor and pumps
+### Hygrometers and pumps
 In ```Main.h``` theres a section which probably looks like this:
 
 ``` C++
@@ -49,6 +54,9 @@ const byte sensorPumpPair[][2] = {
 The first value of these key-value-pairs is the analog pin which the sensor is connected to, the second value the digital pin, for the pump.
 
 Sensor on ```A0``` activates the pump on pin ```13``` if necessary, sensor on A1 acitvates pump on pin ```12```.
+
+### Relay
+In ```Pump.cpp``` there's an ```initPumps```-Function. The relay I use seems to be off on ```HIGH``` and on on ```LOW```. Depending on the relay you use, you might want to change that.
 
 ### Hygrometer calibration
 Depending on your assembly the hygrometers can return different values.
@@ -70,3 +78,6 @@ const int sensorWaterValues[] = {290, 90};
 In this example I have two sensors. Sensor 1 has an air-value of 600 and a water-value of 290, while sensor 2 has 130 and 90 accordingly.
 
 Repeat these steps for every sensor you have.
+
+
+### Water level measurement
