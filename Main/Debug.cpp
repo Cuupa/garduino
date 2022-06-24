@@ -1,13 +1,9 @@
-#if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
-
+#include "Debug.h"
 
 void debug(String msg)
 {
-    #ifdef DEBUG_MODE
+    if(debug_mode){
     Serial.println(msg);
-    #endif
+    }
 }
