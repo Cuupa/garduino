@@ -8,6 +8,8 @@ It then prints out these values.
 These two values are needed for the main.ino to determine the correct moisture percentage.
 */
 
+#include "Arduino.h"
+
 /*
 Change this value to your analog input port you want to use
 */
