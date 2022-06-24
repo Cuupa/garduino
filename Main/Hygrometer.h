@@ -1,11 +1,7 @@
-#if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 
-const int sensorAirValues[] = {600, 130};
-const int sensorWaterValues[] = {290, 90};
+const int sensorAirValues[] = {590, 130};
+const int sensorWaterValues[] = {285, 90};
 
 int getSensorValueInPercent(int sensorValue, int sensorIndex);
 

@@ -1,9 +1,5 @@
-#if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
-
+#include "Debug.h"
 #include "Hygrometer.h"
 
 int getSensorValueInPercent(int sensorValue, int sensorIndex)
@@ -44,8 +40,7 @@ bool isSensorInSoil(float sensorValue, int sensorIndex)
     int b = (sensorValue + airValue) / 2;
     percent = (a / b) * 100;
   }
-
-  return percent > 10.0;
+  return percent > 2.0;
 }
 
 bool isSensorConnected(float sensorValue)
