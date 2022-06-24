@@ -1,16 +1,21 @@
 /*
 
 */
+<<<<<<< HEAD
 #include "Arduino.h"
 
+=======
+/*
+>>>>>>> ca7584ba7c3efdd671d392383fb553f694981ad2
 #include "Main.h"
 #include "Hygrometer.h"
 #include "Debug.h"
 #include "Pump.h"
 #include "PowerSaving.h"
+#include "WaterLevelMeasurement.h"
 
 int numberOfSensorPumpPairs = -1;
-
+*/
 
 /*
 70% for high water requirements
@@ -57,6 +62,18 @@ void loop()
 
     debug("Sensor in soil");
     digitalWrite(2, LOW);
+    float waterlevel = getWaterLevelInLiter();
+    float waterlevelPercentage = convertLiterToPercent(waterlevel);
+
+    if(isWaterLevelCritical(waterlevelPercentage)){
+      continue;
+    }
+
+    if(isWaterLevelLow(waterlevelPercentage)) {
+        debug("Waterlevel low");
+    }
+
+    int soilMoisturePercent = getSensorValueInPercent(sensorValue,sensorIndex);
 
     int soilMoisturePercent = getSensorValueInPercent(sensorValue,sensorIndex);
     debug(String(soilMoisturePercent));
@@ -88,3 +105,4 @@ bool needsWatering(float soilMoisturePercent)
 {
   return soilMoisturePercent < HIGH_WATER_REQUIREMENTS;
 }
+
