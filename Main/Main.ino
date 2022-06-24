@@ -1,12 +1,13 @@
 /*
 
 */
-
+/*
 #include "Main.h"
 #include "Hygrometer.h"
 #include "Debug.h"
 #include "Pump.h"
 #include "PowerSaving.h"
+#include "WaterLevelMeasurement.h"
 
 #if defined(ARDUINO) && ARDUINO >= 100      // #  https://github.com/adafruit/DHT-sensor-library/issues/1   changed 2015 Feb 21
 #include "Arduino.h"
@@ -15,7 +16,7 @@
 #endif
 
 int numberOfSensorPumpPairs = -1;
-
+*/
 
 /*
 70% for high water requirements
@@ -58,6 +59,17 @@ void loop()
       continue;
     }
 
+    float waterlevel = getWaterLevelInLiter();
+    float waterlevelPercentage = convertLiterToPercent(waterlevel);
+
+    if(isWaterLevelCritical(waterlevelPercentage)){
+      continue;
+    }
+
+    if(isWaterLevelLow(waterlevelPercentage)) {
+        debug("Waterlevel low");
+    }
+
     int soilMoisturePercent = getSensorValueInPercent(sensorValue,sensorIndex);
 
     while (needsWatering(soilMoisturePercent))
@@ -78,3 +90,4 @@ bool needsWatering(float soilMoisturePercent)
 {
   return soilMoisturePercent > HIGH_WATER_REQUIREMENTS;
 }
+
