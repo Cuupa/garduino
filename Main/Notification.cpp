@@ -8,7 +8,9 @@ void sendNotification(Waterlevel level, float liter)
     doc["water-level"] = level;
     doc["liter"] = String(liter);
     serializeJson(doc, Serial);
+    Serial.println();
 }
+
 
 void sendNotification(HygrometerStatus status, float humidity)
 {
@@ -16,4 +18,5 @@ void sendNotification(HygrometerStatus status, float humidity)
     doc["hygrometer-status"] = status;
     doc["humidity"] = String(humidity);
     serializeJson(doc, Serial);
+    Serial.println();
 }

@@ -4,7 +4,8 @@ enum Waterlevel
 {
     WATER_LEVEL_OK,
     WATER_LEVEL_LOW,
-    WATER_LEVEL_CRITICAL
+    WATER_LEVEL_CRITICAL,
+    WATER_LEVEL_DISABLED
 };
 enum HygrometerStatus
 {

@@ -14,6 +14,7 @@ float getWaterLevelInLiter();
 float convertLiterToPercent(float volume);
 bool isWaterLevelLow(float waterlevelPercentage);
 bool isWaterLevelCritical(float waterlevelPercentage);
+bool isWaterLevelDisabled();
 float calculateVolume(float distance, float height, float volume);
 float calculateDiameter(float height, float volume);
 

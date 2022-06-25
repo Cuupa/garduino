@@ -70,17 +70,18 @@ void loop()
       soilMoisturePercent = getSensorValueInPercent(sensorValue, sensorIndex);
     }
   }
-  sleep(60);
+  // sleep(60);
 }
 
 bool isHygrometerOkay(float sensorValue, int sensorIndex)
 {
   if (!isSensorInSoil(sensorValue, sensorIndex))
   {
-    sendNotification(HygrometerStatus::OUT_OF_SOIL, 0);
+    sendNotification(HygrometerStatus::OUT_OF_SOIL, sensorValue);
     return false;
   }
 
+  Serial.println(sensorValue);
   if (!isSensorConnected(sensorValue))
   {
     sendNotification(HygrometerStatus::NOT_CONNECTED, 0);
@@ -91,6 +92,11 @@ bool isHygrometerOkay(float sensorValue, int sensorIndex)
 
 bool isWaterLevelOkay(float waterlevel, float waterlevelPercentage)
 {
+  if (isWaterLevelDisabled())
+  {
+    sendNotification(WATER_LEVEL_DISABLED, waterlevel);
+  }
+
   if (isWaterLevelCritical(waterlevelPercentage))
   {
     sendNotification(Waterlevel::WATER_LEVEL_CRITICAL, waterlevel);
