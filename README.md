@@ -2,19 +2,32 @@
 This is a personal project done in my spare time. Use at your own risk.
 The amazon links in the hardware section are affiliate links. You still pay the price you normally would, but I get a small commision if you buy something.
 
+:warning: - Pay close attention
+
 # Hardware
+## Raspberry Pi 
+I use an old Pi 2 as a gateway to fetch weather data.
+[raspberrypi.com](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/)
+
 ## Arduino Uno R3
-This is a board for prototyping. It'll be replaces by a arduino nano, when the hardware will be installed on location
+This is a board for prototyping. It'll be replaces by a arduino micro, when the hardware will be installed on location.
 
 [store.arduino.cc](https://store.arduino.cc/products/arduino-uno-rev3)
+
+## Arduino Micro
+Board used for production.
+[store.arduino.cc](https://store.arduino.cc/products/arduino-micro)
 
 ## Elegoo electronic set 
 Be aware you need a seperate 9V power supply if you don't want to power the components via the arduino.
 
 [amazon](https://amzn.to/39TeAqW)
 
-## WayinTop 3 3V-5V pumps 
+## WayinTop 3 3V-5V pumps :warning:
 Not the best pumps, but rather cheap and used for prototyping.
+They don't seem have insulation to protect the electronics from the water, so use at your own risk.
+You'd better buy a more expensive one, but I didn't know better and wanted some cheap pumps for prototyping.
+(source: https://youtu.be/GNNzLwCidCE?t=250)
 
 [amazon](https://amzn.to/3OmWYmE)
 
@@ -37,7 +50,7 @@ If you want to use the software for yourself feel free to change it to match you
 ## Dependencies
 - AUnit [documentation](https://www.arduino.cc/reference/en/libraries/aunit/)
 - LowPower [documentation](https://github.com/rocketscream/Low-Power)
-
+- ArduinoJson [documentation](https://arduinojson.org/)
 ## Changes you probably have to make
 
 
@@ -81,3 +94,5 @@ Repeat these steps for every sensor you have.
 
 
 ### Water level measurement
+
+### Weather data
