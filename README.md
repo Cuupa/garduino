@@ -3,6 +3,7 @@ This is a personal project done in my spare time. Use at your own risk.
 The amazon links in the hardware section are affiliate links. You still pay the price you normally would, but I get a small commision if you buy something.
 
 :warning: - Pay close attention
+:construction: - Under construction. May change frequently and is not stable
 
 # Hardware
 ## Raspberry Pi 
@@ -27,6 +28,7 @@ Be aware you need a seperate 9V power supply if you don't want to power the comp
 Not the best pumps, but rather cheap and used for prototyping.
 They don't seem have insulation to protect the electronics from the water, so use at your own risk.
 You'd better buy a more expensive one, but I didn't know better and wanted some cheap pumps for prototyping.
+
 (source: https://youtu.be/GNNzLwCidCE?t=250)
 
 [amazon](https://amzn.to/3OmWYmE)
@@ -93,6 +95,14 @@ In this example I have two sensors. Sensor 1 has an air-value of 600 and a water
 Repeat these steps for every sensor you have.
 
 
-### Water level measurement
+### Water level measurement :construction:
 
-### Weather data
+### Weather data :construction:
+If you use a rapsberry pi gateway like I do, there is a directory called ```Raspberry Pi```
+There is a script for setting up your pi. 
+
+Open ```setup_communication.sh```and change the username matching your system. In my case it's called garduino. Then run it on your raspberry pi or just copy and paste it step by step.
+
+Then copy the ```server.py```, ```influxdb.config``` and ```weather.config``` to your pi to a directoy you might seem fit (like ```/opt/garduino/```). Change the values in the config to match your needs.
+
+As soon you start the ```server.py```(```python3 sever.py```), it listens to any incoming request over serial.
