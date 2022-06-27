@@ -15,22 +15,25 @@ influx_client = None
 zip_code = ''
 
 weather_url = 'https://www.proplanta.de/Wetter/profi-wetter.php?SITEID=60&PLZ={zip_code}&WETTERaufrufen=plz&Wtp=&SUCHE=Wetter&wT='
-
 weather_request_header = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36',
     'Accept-Encoding': 'gzip,deflate,sdch'
 }
 
+debug = True
+
+
 def readWeatherConfig():
-    zip_code = ''
+    zip = ''
     with open("influxdb.config") as f:
         for line in f:
             values = line.split("=")
             key = values[0].strip()
             value = values[1].strip()
             if key == 'zip_code':
-                zip_code = value
-    return zip_code
+                zip = value
+    return zip
+
 
 def readInfluxConfig():
     influx_host = ''
@@ -76,6 +79,7 @@ def setup():
         influx_client.create_database(influx_database_name)
     influx_client.switch_database(influx_database_name)
 
+    global zip_code
     zip_code = readWeatherConfig()
 
 
@@ -92,8 +96,9 @@ def listen():
             if request_type == 'measurement':
                 influx_client.write(message)
             elif request_type == 'request':
-                if payload["request"] == 'weather_data':
+                if payload['request'] == 'weather_data':
                     weather = getWeatherData()
+                    ser.write(weather.encode('utf-8'))
 
 
 def getWeatherData():
@@ -140,6 +145,8 @@ def getCondition(element):
         return 'sunny'
     elif val == 'heiter':
         return 'bright'
+    elif val == 'bedeckt':
+        return 'cloudy'
     elif val == 'wolkig':
         return 'cloudy'
     elif val == 'stark bewölkt':
@@ -147,6 +154,9 @@ def getCondition(element):
     elif val == 'regen':
         return 'rain'
 
+def debug(msg):
+    if debug:
+        print(msg)
 
 if __name__ == '__main__':
     setup()
