@@ -42,9 +42,9 @@ def readInfluxConfig():
     influx_password = ''
     influx_database_name = ''
 
-    with open("influxdb.config") as f:
+    with open('influxdb.config') as f:
         for line in f:
-            values = line.split("=")
+            values = line.split('=')
             key = values[0].strip()
             value = values[1].strip()
             if key == 'influx_host':
