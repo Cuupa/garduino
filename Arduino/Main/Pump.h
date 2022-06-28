@@ -1,5 +1,12 @@
 #include "Arduino.h"
 
-void initPumps(byte sensorPumpPair[][2], int numberOfSensorPumpPairs);
-
-void pump(float ms, byte address);
+class Pump
+{
+    public:
+        Pump(byte address);
+        Pump();
+        void init();
+        void pump(float ms);
+    private:
+        byte _address;
+};

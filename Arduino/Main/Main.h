@@ -10,8 +10,3 @@ but if you don't want to waste 5 seconds per run better set it to false
 */
 const bool connectedToServer = false;
 
-
-// key-value pairs of every sensor-pump-pair
-const byte sensorPumpPair[][2] = {
-    {A0, 13},
-    {A1, 12}};

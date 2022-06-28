@@ -1,15 +1,13 @@
 #include "Message.h"
 #include "ArduinoJson.h"
 
-const String status = "status";
-const String time = "time";
-const String temperature = "temperature";
-const String condition = "condition";
-const String evaporation = "evaporation";
-const String rainfallToday = "rainfall-today";
-const String rainfallTomorrow = "rainfall-tomorrow";
 
-void sendNotification(Waterlevel level, float liter)
+Message::Message()
+{
+
+}
+
+void Message::sendNotification(Waterlevel level, float liter)
 {
     StaticJsonDocument<69> doc;
     doc["water-level"] = level;
@@ -18,7 +16,7 @@ void sendNotification(Waterlevel level, float liter)
     serializeJson(doc, Serial);
 }
 
-void sendNotification(HygrometerStatus status, float humidity, int sensorIndex)
+void Message::sendNotification(HygrometerStatus status, float humidity, int sensorIndex)
 {
     StaticJsonDocument<192> doc;
     doc["hygrometer-status"] = status;
@@ -28,7 +26,7 @@ void sendNotification(HygrometerStatus status, float humidity, int sensorIndex)
     serializeJson(doc, Serial);
 }
 
-void sendNotification(float wateredVolume, int sensorIndex)
+void Message::sendNotification(float wateredVolume, int sensorIndex)
 {
     StaticJsonDocument<192> doc;
     doc["watered-volume"] = wateredVolume;
@@ -37,7 +35,7 @@ void sendNotification(float wateredVolume, int sensorIndex)
     serializeJson(doc, Serial);
 }
 
-void request(RequestType type, String response[])
+void Message::request(RequestType type, String response[])
 {
     
     StaticJsonDocument<64> doc;

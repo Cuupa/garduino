@@ -1,0 +1,9 @@
+#ifndef HYGROMETER_STATUS_
+#define HYGROMETER_STATUS_
+enum HygrometerStatus
+{
+    HYGROMETER_OK,
+    HYGROMETER_OUT_OF_SOIL,
+    HYGROMETER_NOT_CONNECTED
+};
+#endif
