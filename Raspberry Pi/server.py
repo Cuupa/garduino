@@ -26,7 +26,7 @@ debug = True
 
 def readWeatherConfig():
     zip = ''
-    with open('influxdb.config') as f:
+    with open('weather.config') as f:
         for line in f:
             values = line.split('=')
             key = values[0].strip()
@@ -83,28 +83,32 @@ def setup():
     global zip_code
     zip_code = readWeatherConfig()
 
-
-def listen():
+def connect():
     success = False
     while not success:
         try:
             ser = serial.Serial(input_device, 9600, timeout=5)
             ser.reset_input_buffer()
             success = True
+            return ser
         except:
-            print('Device not connected')
+            debug('Device not connected')
 
+
+def listen():
+    ser = connect()
+    debug('listening')
     while True:
         try:
             if ser.in_waiting > 0:
                 message = ser.readline().decode('utf-8').rstrip()
-
+                debug('Received message')
+                debug(message)
                 if "Garduino - 1.0" in message:
                     continue
                 if "Sensor-Pump pairs found" in message:
                     continue
 
-                print(message)
                 payload = json.loads(message)
                 request_type = payload['type']
 
@@ -114,10 +118,15 @@ def listen():
                 elif request_type == 'request':
                     if payload['request'] == 'weather-data':
                         weather = getWeatherData()
-                        ser.write(weather.encode('utf-8'))
+                        response = json.dumps(weather)
+                        debug("Response")
+                        debug(response)
+                        ser.write(response.encode('utf-8'))
+        except IOError as ioe:
+            connect()
         except Exception as e:
-            print(e)
-            print("Failed to process " + message)
+            debug(e)
+            debug('failed to process ' + message)
 
 
 def getData(payload):
