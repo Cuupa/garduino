@@ -35,3 +35,6 @@
 
 /libraries/**
 /.vscode/**
+/.idea/**
+/cmake-build-debug/**
+CMakeLists.txt
