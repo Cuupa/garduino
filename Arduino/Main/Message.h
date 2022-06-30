@@ -44,4 +44,5 @@ private:
     String Message::getRequestType(RequestType type);
     String Message::getMessageType(MessageType type);
     String Message::getHygrometerStatus(HygrometerStatus status);
+    String Message::getWaterLevel(Waterlevel level);
 };

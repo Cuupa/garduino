@@ -24,7 +24,7 @@ void setup()
 
   numberOfIrrigationSystems = (sizeof(irrigationSystem.sensorPumpPair) / sizeof(*irrigationSystem.sensorPumpPair));
   debug(String(numberOfIrrigationSystems) + " Sensor-Pump pairs found");
-  delay(10000)
+  delay(10000);
 }
 
 void loop()
@@ -95,7 +95,7 @@ bool isHygrometerOkay(float sensorValue, int sensorIndex)
 {
   if (!irrigationSystem.isSensorInSoil(sensorValue, sensorIndex))
   {
-    message.sendNotification(HygrometerStatus::HYGROMETER_OUT_OF_SOIL, sensorValue, sensorIndex);
+    message.sendNotification(HygrometerStatus::HYGROMETER_OUT_OF_SOIL, 0, sensorIndex);
     return false;
   }
 
@@ -112,6 +112,7 @@ bool isWaterLevelOkay(float waterlevel, float waterlevelPercentage)
   if (isWaterLevelDisabled())
   {
     message.sendNotification(Waterlevel::WATER_LEVEL_DISABLED, waterlevel);
+    return true;
   }
 
   if (isWaterLevelCritical(waterlevelPercentage))
@@ -123,12 +124,12 @@ bool isWaterLevelOkay(float waterlevel, float waterlevelPercentage)
   else if (isWaterLevelLow(waterlevelPercentage))
   {
     message.sendNotification(Waterlevel::WATER_LEVEL_LOW, waterlevel);
+    return true;
   }
 
   else
   {
     message.sendNotification(Waterlevel::WATER_LEVEL_OK, waterlevel);
+    return true;
   }
-
-  return true;
 }

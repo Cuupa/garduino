@@ -1,7 +1,6 @@
 #include "Message.h"
 #include "ArduinoJson.h"
 
-
 Message::Message()
 {
 }
@@ -10,17 +9,13 @@ void Message::sendNotification(Waterlevel level, float liter)
 {
     StaticJsonDocument<128> doc;
     doc["system-name"] = system_name;
-    doc["water-level"] = level;
+    doc["water-level"] = getWaterLevel(level);
     doc["liter"] = String(liter);
     doc["type"] = getMessageType(MessageType::MEASUREMENT);
+
     String out;
     serializeJson(doc, out);
-<<<<<<< HEAD
     Serial.println(out);
-    serializeJson(doc, Serial);
-=======
-    Serial.println(out)
->>>>>>> 64394bb668c7ddf4ce990e61e6a3e440aa92d31a
 }
 
 void Message::sendNotification(HygrometerStatus status, float humidity, int sensorIndex)
@@ -31,10 +26,9 @@ void Message::sendNotification(HygrometerStatus status, float humidity, int sens
     doc["humidity"] = String(humidity);
     doc["sensor-index"] = String(sensorIndex);
     doc["type"] = getMessageType(MessageType::MEASUREMENT);
-
     String out;
     serializeJson(doc, out);
-    Serial.println(out)
+    Serial.println(out);
 }
 
 void Message::sendNotification(float wateredVolume, int sensorIndex)
@@ -44,7 +38,6 @@ void Message::sendNotification(float wateredVolume, int sensorIndex)
     doc["watered-volume"] = wateredVolume;
     doc["sensor-index"] = String(sensorIndex);
     doc["type"] = getMessageType(MessageType::MEASUREMENT);
-    
     String out;
     serializeJson(doc, out);
     Serial.println(out);
@@ -56,10 +49,9 @@ void Message::request(RequestType type, String response[])
     StaticJsonDocument<64> doc;
     doc["type"] = getMessageType(MessageType::REQUEST);
     doc["request"] = getRequestType(type);
-    
     String out;
     serializeJson(doc, out);
-    Serial.println(out)
+    Serial.println(out);
 
     String responseJson = Serial.readStringUntil('\n');
 
@@ -103,18 +95,44 @@ String Message::getMessageType(MessageType type)
 
 String Message::getHygrometerStatus(HygrometerStatus status)
 {
-    if(status == HygrometerStatus::HYGROMETER_OK)
+    if (status == HygrometerStatus::HYGROMETER_OK)
     {
         return "hygrometer-ok";
     }
 
-    else if(status == HygrometerStatus::HYGROMETER_NOT_CONNECTED)
+    else if (status == HygrometerStatus::HYGROMETER_NOT_CONNECTED)
     {
         return "hygrometer-not-connected";
     }
 
-    else if(status ==HygrometerStatus::HYGROMETER_OUT_OF_SOIL)
+    else if (status == HygrometerStatus::HYGROMETER_OUT_OF_SOIL)
     {
         return "hygrometer-out-of-soil";
     }
+
+    return "-1";
+}
+
+String Message::getWaterLevel(Waterlevel level)
+{
+    if (level == Waterlevel::WATER_LEVEL_OK)
+    {
+        return "water-level-ok";
+    }
+
+    else if (level == Waterlevel::WATER_LEVEL_LOW)
+    {
+        return "water-level-low";
+    }
+
+    else if (level == Waterlevel::WATER_LEVEL_CRITICAL)
+    {
+        return "water-level-critical";
+    }
+
+    else if (level == Waterlevel::WATER_LEVEL_DISABLED)
+    {
+        return "water-level-disabled";
+    }
+    return "-1";
 }
