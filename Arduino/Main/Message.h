@@ -9,7 +9,7 @@ enum Waterlevel
     WATER_LEVEL_DISABLED
 };
 
-enum NotificationType
+enum MessageType
 {
     MEASUREMENT,
     REQUEST
@@ -32,6 +32,7 @@ public:
     void request(RequestType type, String response[]);
 
 private:
+    const String system_name = "Node1";
     const String status = "status";
     const String time = "time";
     const String temperature = "temperature";
@@ -39,4 +40,8 @@ private:
     const String evaporation = "evaporation";
     const String rainfallToday = "rainfall-today";
     const String rainfallTomorrow = "rainfall-tomorrow";
+
+    String Message::getRequestType(RequestType type);
+    String Message::getMessageType(MessageType type);
+    String Message::getHygrometerStatus(HygrometerStatus status);
 };

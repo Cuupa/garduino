@@ -4,42 +4,44 @@
 
 Message::Message()
 {
-
 }
 
 void Message::sendNotification(Waterlevel level, float liter)
 {
-    StaticJsonDocument<69> doc;
+    StaticJsonDocument<128> doc;
+    doc["system-name"] = system_name;
     doc["water-level"] = level;
     doc["liter"] = String(liter);
-    doc["type"] = NotificationType::MEASUREMENT;
+    doc["type"] = getMessageType(MessageType::MEASUREMENT);
     serializeJson(doc, Serial);
 }
 
 void Message::sendNotification(HygrometerStatus status, float humidity, int sensorIndex)
 {
     StaticJsonDocument<192> doc;
-    doc["hygrometer-status"] = status;
+    doc["system-name"] = system_name;
+    doc["hygrometer-status"] = getHygrometerStatus(status);
     doc["humidity"] = String(humidity);
     doc["sensor-index"] = String(sensorIndex);
-    doc["type"] = NotificationType::MEASUREMENT;
+    doc["type"] = getMessageType(MessageType::MEASUREMENT);
     serializeJson(doc, Serial);
 }
 
 void Message::sendNotification(float wateredVolume, int sensorIndex)
 {
     StaticJsonDocument<192> doc;
+    doc["system-name"] = system_name;
     doc["watered-volume"] = wateredVolume;
     doc["sensor-index"] = String(sensorIndex);
-    doc["type"] = NotificationType::MEASUREMENT;
+    doc["type"] = getMessageType(MessageType::MEASUREMENT);
     serializeJson(doc, Serial);
 }
 
 void Message::request(RequestType type, String response[])
 {
-    
+
     StaticJsonDocument<64> doc;
-    doc["type"] = NotificationType::REQUEST;
+    doc["type"] = getMessageType(MessageType::REQUEST);
     doc["request"] = type;
     serializeJson(doc, Serial);
 
@@ -47,7 +49,7 @@ void Message::request(RequestType type, String response[])
 
     StaticJsonDocument<192> responseDoc;
     DeserializationError error = deserializeJson(responseDoc, responseJson);
-    
+
     if (error)
     {
         response[0] = "error";
@@ -59,4 +61,44 @@ void Message::request(RequestType type, String response[])
     response[4] = responseDoc[evaporation].as<String>();
     response[5] = responseDoc[rainfallToday].as<String>();
     response[6] = responseDoc[rainfallTomorrow].as<String>();
+}
+
+String Message::getRequestType(RequestType type)
+{
+    if (type == RequestType::WEATHER_DATA)
+    {
+        return "weather-data";
+    }
+    return "-1";
+}
+
+String Message::getMessageType(MessageType type)
+{
+    if (type == MessageType::REQUEST)
+    {
+        return "request";
+    }
+    else if (type == MessageType::MEASUREMENT)
+    {
+        return "measurement";
+    }
+    return "-1";
+}
+
+String Message::getHygrometerStatus(HygrometerStatus status)
+{
+    if(status == HygrometerStatus::HYGROMETER_OK)
+    {
+        return "hygrometer-ok";
+    }
+
+    else if(status == HygrometerStatus::HYGROMETER_NOT_CONNECTED)
+    {
+        return "hygrometer-not-connected";
+    }
+
+    else if(status ==HygrometerStatus::HYGROMETER_OUT_OF_SOIL)
+    {
+        return "hygrometer-out-of-soil";
+    }
 }
