@@ -15,8 +15,12 @@ void Message::sendNotification(Waterlevel level, float liter)
     doc["type"] = getMessageType(MessageType::MEASUREMENT);
     String out;
     serializeJson(doc, out);
+<<<<<<< HEAD
     Serial.println(out);
     serializeJson(doc, Serial);
+=======
+    Serial.println(out)
+>>>>>>> 64394bb668c7ddf4ce990e61e6a3e440aa92d31a
 }
 
 void Message::sendNotification(HygrometerStatus status, float humidity, int sensorIndex)
@@ -27,9 +31,10 @@ void Message::sendNotification(HygrometerStatus status, float humidity, int sens
     doc["humidity"] = String(humidity);
     doc["sensor-index"] = String(sensorIndex);
     doc["type"] = getMessageType(MessageType::MEASUREMENT);
+
     String out;
     serializeJson(doc, out);
-    Serial.println(out);
+    Serial.println(out)
 }
 
 void Message::sendNotification(float wateredVolume, int sensorIndex)
@@ -39,6 +44,7 @@ void Message::sendNotification(float wateredVolume, int sensorIndex)
     doc["watered-volume"] = wateredVolume;
     doc["sensor-index"] = String(sensorIndex);
     doc["type"] = getMessageType(MessageType::MEASUREMENT);
+    
     String out;
     serializeJson(doc, out);
     Serial.println(out);
@@ -49,10 +55,11 @@ void Message::request(RequestType type, String response[])
 
     StaticJsonDocument<64> doc;
     doc["type"] = getMessageType(MessageType::REQUEST);
-    doc["request"] = type;
+    doc["request"] = getRequestType(type);
+    
     String out;
     serializeJson(doc, out);
-    Serial.println(out);
+    Serial.println(out)
 
     String responseJson = Serial.readStringUntil('\n');
 

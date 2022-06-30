@@ -2,11 +2,12 @@
 
 import serial
 import json
+import requests
+import time
 
 from influxdb import InfluxDBClient
-
 from bs4 import BeautifulSoup
-import requests
+from datetime import datetime
 
 input_device = '/dev/ttyACM0'
 
@@ -25,9 +26,9 @@ debug = True
 
 def readWeatherConfig():
     zip = ''
-    with open("influxdb.config") as f:
+    with open('influxdb.config') as f:
         for line in f:
-            values = line.split("=")
+            values = line.split('=')
             key = values[0].strip()
             value = values[1].strip()
             if key == 'zip_code':
@@ -63,18 +64,18 @@ def readInfluxConfig():
 
 def setup():
     influx_host, influx_port, influx_username, influx_password, influx_database_name = readInfluxConfig()
-
+    global influx_client
     influx_client = InfluxDBClient(host=influx_host,
                                    port=influx_port,
                                    username=influx_username,
                                    password=influx_password,
-                                   ssl=True,
+                                   ssl=False,
                                    verify_ssl=False)
 
     databases = influx_client.get_list_database()
 
     database_exists = next(
-        (item for item in databases if item["name"] == influx_database_name), False)
+        (item for item in databases if item['name'] == influx_database_name), False)
     if not database_exists:
         influx_client.create_database(influx_database_name)
     influx_client.switch_database(influx_database_name)
@@ -84,28 +85,99 @@ def setup():
 
 
 def listen():
-    ser = serial.Serial(input_device, 9600, timeout=5)
-    ser.reset_input_buffer()
+    success = False
+    while not success:
+        try:
+            ser = serial.Serial(input_device, 9600, timeout=5)
+            ser.reset_input_buffer()
+            success = True
+        except:
+            print('Device not connected')
 
     while True:
-        if ser.in_waiting > 0:
-            message = ser.readline().decode('utf-8').rstrip()
-            payload = json.loads(message)
-            request_type = payload['type']
+        try:
+            if ser.in_waiting > 0:
+                message = ser.readline().decode('utf-8').rstrip()
 
-            if request_type == 'measurement':
-                influx_client.write(message)
-            elif request_type == 'request':
-                if payload['request'] == 'weather_data':
-                    weather = getWeatherData()
-                    ser.write(weather.encode('utf-8'))
+                if "Garduino - 1.0" in message:
+                    continue
+                if "Sensor-Pump pairs found" in message:
+                    continue
+
+                print(message)
+                payload = json.loads(message)
+                request_type = payload['type']
+
+                if request_type == 'measurement':
+                    json_payload = getData(payload)
+                    influx_client.write_points(json_payload)
+                elif request_type == 'request':
+                    if payload['request'] == 'weather-data':
+                        weather = getWeatherData()
+                        ser.write(weather.encode('utf-8'))
+        except Exception as e:
+            print(e)
+            print("Failed to process " + message)
+
+
+def getData(payload):
+    json_payload = []
+    data = {}
+    if 'water-level' in payload:
+        data = {
+            'measurement': payload['system-name'],
+            'tags': {
+                'type': 'water-level',
+                'sensor-index': int(payload['sensor-index']),
+                'system-name': payload['system-name'],
+            },
+            'time': datetime.now(),
+            'fields': {
+                'system-name': payload['system-name'],
+                'water-level': float(payload['water-level']),
+                'liter': float(payload['liter'])
+            }
+        }
+    elif 'hygrometer-status' in payload:
+        data = {
+            'measurement': payload['system-name'],
+            'tags': {
+                'type': 'hygrometer',
+                'sensor-index': int(payload['sensor-index']),
+                'system-name': payload['system-name']
+            },
+            'time': datetime.now(),
+            'fields': {
+                'system-name': payload['system-name'],
+                'hygrometer-status': payload['hygrometer-status'],
+                'humidity': float(payload['humidity']),
+                'sensor-index': int(payload['sensor-index'])
+            }
+        }
+    elif 'watered-volume' in payload:
+        data = {
+            'measurement': payload['system-name'],
+            'tags': {
+                'type': 'watered',
+                'sensor-index': int(payload['sensor-index']),
+                'system-name': payload['system-name']
+            },
+            'time': datetime.now(),
+            'fields': {
+                'system-name': payload['system-name'],
+                'watered-volume': float(payload['watered-volume']),
+                'sensor-index': float(payload['sensor-index'])
+            }
+        }
+    json_payload.append(data)
+    return json_payload
 
 
 def getWeatherData():
     url = weather_url.format(zip_code=zip_code)
     response = requests.get(url, headers=weather_request_header)
     if response.status_code != 200:
-        print("error queueing weather")
+        print('error queueing weather')
         return {}
 
     data = {}
@@ -154,9 +226,11 @@ def getCondition(element):
     elif val == 'regen':
         return 'rain'
 
+
 def debug(msg):
     if debug:
         print(msg)
+
 
 if __name__ == '__main__':
     setup()

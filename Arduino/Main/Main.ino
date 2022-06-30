@@ -24,6 +24,7 @@ void setup()
 
   numberOfIrrigationSystems = (sizeof(irrigationSystem.sensorPumpPair) / sizeof(*irrigationSystem.sensorPumpPair));
   debug(String(numberOfIrrigationSystems) + " Sensor-Pump pairs found");
+  delay(10000)
 }
 
 void loop()
