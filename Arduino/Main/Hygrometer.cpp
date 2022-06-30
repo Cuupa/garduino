@@ -30,6 +30,8 @@ The sensor value
 */
 bool Hygrometer::isSensorInSoil(float sensorValue, int airValue)
 {
+  Serial.println(sensorValue);
+  Serial.println(airValue);
   float percent = 0;
   if (airValue > sensorValue)
   {
@@ -43,6 +45,7 @@ bool Hygrometer::isSensorInSoil(float sensorValue, int airValue)
     int b = (sensorValue + airValue) / 2;
     percent = (a / b) * 100;
   }
+  Serial.println(percent);
   return percent > 2.0;
 }
 
