@@ -6,14 +6,14 @@ Hygrometer::Hygrometer(byte address)
   _address = address;
 }
 
-Hygrometer::Hygrometer(){
+Hygrometer::Hygrometer()
+{
   _address = 0;
 }
 
 int Hygrometer::getSensorValueInPercent(int sensorValue, int airValue, int waterValue)
 {
   int value = map(sensorValue, airValue, waterValue, 0, 100);
-
   if (value > 100)
   {
     return 100;
@@ -30,8 +30,6 @@ The sensor value
 */
 bool Hygrometer::isSensorInSoil(float sensorValue, int airValue)
 {
-  Serial.println(sensorValue);
-  Serial.println(airValue);
   float percent = 0;
   if (airValue > sensorValue)
   {
@@ -45,7 +43,6 @@ bool Hygrometer::isSensorInSoil(float sensorValue, int airValue)
     int b = (sensorValue + airValue) / 2;
     percent = (a / b) * 100;
   }
-  Serial.println(percent);
   return percent > 2.0;
 }
 

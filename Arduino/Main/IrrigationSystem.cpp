@@ -2,8 +2,8 @@
 
 IrrigationSystem::IrrigationSystem()
 {
-    for (int i = 0; i< numberOfIrrigationSystems; i++)
-    {   
+    for (int i = 0; i < numberOfIrrigationSystems; i++)
+    {
         SensorPumpPair pair(addresses[i][0], addresses[i][1]);
         sensorPumpPair[i] = pair;
     }
@@ -30,25 +30,25 @@ bool IrrigationSystem::isPlantOutsideRoofed(int irrigationLoopIndex)
 
 bool IrrigationSystem::needsWatering(int irrigationLoopIndex, float soilMoistureInPercent)
 {
-    return waterRequirements[irrigationLoopIndex] < soilMoistureInPercent;
+    return waterRequirements[irrigationLoopIndex] > soilMoistureInPercent;
 }
 
- float IrrigationSystem::getMoistureSensorValue(int systemIndex)
- {
-    sensorPumpPair[systemIndex].getMoistureSensorValue();
- }
+float IrrigationSystem::getMoistureSensorValue(int systemIndex)
+{
+    return sensorPumpPair[systemIndex].getMoistureSensorValue();
+}
 
- int IrrigationSystem::getSensorValueInPercent(int sensorValue, int systemIndex)
- {
+int IrrigationSystem::getSensorValueInPercent(int sensorValue, int systemIndex)
+{
     int airValue = sensorAirValues[systemIndex];
     int waterValue = sensorWaterValues[systemIndex];
-    sensorPumpPair[systemIndex].getSensorValueInPercent(sensorValue, airValue, waterValue);
- }
+    return sensorPumpPair[systemIndex].getSensorValueInPercent(sensorValue, airValue, waterValue);
+}
 
 bool IrrigationSystem::isSensorInSoil(float sensorValue, int systemIndex)
 {
     int airValue = sensorAirValues[systemIndex];
-    sensorPumpPair[systemIndex].isSensorInSoil(sensorValue, airValue);
+    return sensorPumpPair[systemIndex].isSensorInSoil(sensorValue, airValue);
 }
 bool IrrigationSystem::isSensorConnected(float sensorValue)
 {
