@@ -18,7 +18,7 @@ void setup()
 {
   delay(1000);
   Serial.begin(BAUD_RATE);
-  Serial.setTimeout(5000);
+  //Serial.setTimeout(5000);
 
   debug(VERSION_NUMBER);
 
@@ -30,10 +30,17 @@ void setup()
 void loop()
 {
   String weatherData[] = {};
+  debug("Requesting weather data");
   message.request(RequestType::WEATHER_DATA, weatherData);
+
+  debug("Received weather data");
+  debug(weatherData);
 
   bool isRaining = isCurrentlyRaining(weatherData);
   bool isRainfallSufficiant = isTodaysAndTomorrowsRainfallSufficient(weatherData);
+
+  debug("It's raining: " +  String(isRaining));
+  debug("Rainfall is sufficiant: " + String(isRainfallSufficiant));
 
   // iterate over every sensor
   for (int systemIndex = 0; systemIndex < numberOfIrrigationSystems; systemIndex++)
