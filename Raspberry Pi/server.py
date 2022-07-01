@@ -9,6 +9,50 @@ from influxdb import InfluxDBClient
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+## Constants
+_utf_8 = 'utf-8'
+
+_weather_config_file = 'weather.config'
+_influx_config_file = 'influx.config'
+
+## weather config constants
+_zip_code = 'zip_code'
+
+## Influxdb config file constants
+_influx_host = 'influx_host'
+_influx_port = 'influx_port'
+_influx_username = 'influx_username'
+_influx_password = 'influx_password'
+_influx_database_name = 'influx_database_name'
+
+
+## Payload constants
+
+## Requests
+_type = 'type'
+_measurement = 'measurement'
+_request = 'request'
+_weather_data = 'weather-data'
+
+_water_level = 'water-level'
+_hygrometer_status = 'hygrometer-status'
+_watered_volume = 'watered-volume'
+_hygrometer = 'hygrometer'
+_humidity = 'humidity'
+_system_name = 'system-name'
+_sensor_index = 'sensor-index'
+_liter = 'liter'
+_watered = 'watered'
+
+## influx
+_tags = 'tags'
+_time = 'time'
+_fields = 'fields'
+
+## agrarwetter
+_agrarwetter_current_conditions_selector = '.MITTEFORMULARSPALTE_WETTER > .SCHRIFT_FORMULAR_WERTE_MITTE'
+
+
 input_device = '/dev/ttyACM0'
 
 influx_client = None
@@ -24,14 +68,15 @@ weather_request_header = {
 debug = True
 
 
+
 def readWeatherConfig():
     zip = ''
-    with open('weather.config') as f:
+    with open(_weather_config_file) as f:
         for line in f:
             values = line.split('=')
             key = values[0].strip()
             value = values[1].strip()
-            if key == 'zip_code':
+            if key == _zip_code:
                 zip = value
     return zip
 
@@ -43,20 +88,20 @@ def readInfluxConfig():
     influx_password = ''
     influx_database_name = ''
 
-    with open('influxdb.config') as f:
+    with open(_influx_config_file) as f:
         for line in f:
             values = line.split('=')
             key = values[0].strip()
             value = values[1].strip()
-            if key == 'influx_host':
+            if key == _influx_host:
                 influx_host = value
-            elif key == 'influx_port':
+            elif key == _influx_port:
                 influx_port = value
-            elif key == 'influx_username':
+            elif key == _influx_username:
                 influx_username = value
-            elif key == 'influx_password':
+            elif key == _influx_password:
                 influx_password = value
-            elif key == 'influx_database_name':
+            elif key == _influx_database_name:
                 influx_database_name = value
 
     return influx_host, influx_port, influx_username, influx_password, influx_database_name
@@ -84,12 +129,10 @@ def setup():
     zip_code = readWeatherConfig()
 
 def connect():
-    success = False
-    while not success:
+    while 1:
         try:
             ser = serial.Serial(input_device, 9600, timeout=5)
             ser.reset_input_buffer()
-            success = True
             return ser
         except:
             debug('Device not connected')
@@ -98,32 +141,30 @@ def connect():
 def listen():
     ser = connect()
     debug('listening')
-    while True:
+    while 1:
         try:
             if ser.in_waiting > 0:
-                message = ser.readline().decode('utf-8').rstrip()
+                message = ser.readline().decode(_utf_8).rstrip()
                 debug('Received message')
                 debug(message)
-                if "Garduino - 1.0" in message:
-                    continue
-                if "Sensor-Pump pairs found" in message:
+                if "Debug: " in message:
                     continue
 
                 payload = json.loads(message)
-                request_type = payload['type']
+                request_type = payload[_type]
 
-                if request_type == 'measurement':
+                if request_type == _measurement:
                     json_payload = getData(payload)
                     influx_client.write_points(json_payload)
-                elif request_type == 'request':
-                    if payload['request'] == 'weather-data':
+                elif request_type == _request:
+                    if payload[_request] == _weather_data:
                         weather = getWeatherData()
                         response = json.dumps(weather)
                         debug("Response")
                         debug(response)
-                        ser.write(response.encode('utf-8'))
+                        ser.write(response.encode(_utf_8))
         except IOError as ioe:
-            connect()
+           ser = connect()
         except Exception as e:
             debug(e)
             debug('failed to process ' + message)
@@ -132,50 +173,50 @@ def listen():
 def getData(payload):
     json_payload = []
     data = {}
-    if 'water-level' in payload:
+    if _water_level in payload:
         data = {
-            'measurement': payload['system-name'],
-            'tags': {
-                'type': 'water-level',
-                'sensor-index': int(payload['sensor-index']),
-                'system-name': payload['system-name'],
+            _measurement: payload[_system_name],
+            _tags: {
+                _type: _water_level,
+                _sensor_index: int(payload[_sensor_index]),
+                _system_name: payload[_system_name],
             },
-            'time': datetime.now(),
-            'fields': {
-                'system-name': payload['system-name'],
-                'water-level': float(payload['water-level']),
-                'liter': float(payload['liter'])
+            _time: datetime.now(),
+            _fields: {
+                _system_name: payload[_system_name],
+                _water_level: float(payload[_water_level]),
+                _liter: float(payload[_liter])
             }
         }
-    elif 'hygrometer-status' in payload:
+    elif _hygrometer_status in payload:
         data = {
-            'measurement': payload['system-name'],
-            'tags': {
-                'type': 'hygrometer',
-                'sensor-index': int(payload['sensor-index']),
-                'system-name': payload['system-name']
+            _measurement: payload[_system_name],
+            _tags: {
+                _type: _hygrometer,
+                _sensor_index: int(payload[_sensor_index]),
+                _system_name: payload[_system_name]
             },
-            'time': datetime.now(),
-            'fields': {
-                'system-name': payload['system-name'],
-                'hygrometer-status': payload['hygrometer-status'],
-                'humidity': float(payload['humidity']),
-                'sensor-index': int(payload['sensor-index'])
+            _time: datetime.now(),
+            _fields: {
+                _system_name: payload[_system_name],
+                _hygrometer_status: payload[_hygrometer_status],
+                _humidity: float(payload[_humidity]),
+                _sensor_index: int(payload[_sensor_index])
             }
         }
-    elif 'watered-volume' in payload:
+    elif _watered_volume in payload:
         data = {
-            'measurement': payload['system-name'],
-            'tags': {
-                'type': 'watered',
-                'sensor-index': int(payload['sensor-index']),
-                'system-name': payload['system-name']
+            _measurement: payload[_system_name],
+            _tags: {
+                _type: _watered,
+                _sensor_index: int(payload[_sensor_index]),
+                _system_name: payload[_system_name]
             },
-            'time': datetime.now(),
-            'fields': {
-                'system-name': payload['system-name'],
-                'watered-volume': float(payload['watered-volume']),
-                'sensor-index': float(payload['sensor-index'])
+            _time: datetime.now(),
+            _fields: {
+                _system_name: payload[_system_name],
+                _watered_volume: float(payload[_watered_volume]),
+                _sensor_index: float(payload[_sensor_index])
             }
         }
     json_payload.append(data)
@@ -192,8 +233,8 @@ def getWeatherData():
     data = {}
     document = BeautifulSoup(response.content, 'html.parser')
     current_condition = document.select(
-        '.MITTEFORMULARSPALTE_WETTER > .SCHRIFT_FORMULAR_WERTE_MITTE')
-    data['time'] = current_condition[1].text.replace(
+        _agrarwetter_current_conditions_selector)
+    data[_time] = current_condition[1].text.replace(
         '.', ':').replace(' Uhr', '')
     data['temperature'] = current_condition[2].text.replace(',', '.')
     data['condition'] = getCondition(current_condition[4])
