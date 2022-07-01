@@ -1,5 +1,6 @@
 #include "Message.h"
 #include "ArduinoJson.h"
+#include "Main.h"
 
 Message::Message()
 {
@@ -45,7 +46,12 @@ void Message::sendNotification(float wateredVolume, int sensorIndex)
 
 void Message::request(RequestType type, String response[])
 {
-
+    if (!connectedToServer)
+    {
+        response[0] = "error";
+        return;
+    }
+    
     StaticJsonDocument<64> doc;
     doc["type"] = getMessageType(MessageType::REQUEST);
     doc["request"] = getRequestType(type);
