@@ -35,9 +35,6 @@ public:
 
     static const int numberOfIrrigationSystems = 2;
 
-    int sensorAirValues[numberOfIrrigationSystems] = {590, 130};
-    int sensorWaterValues[numberOfIrrigationSystems] = {285, 90};
-
     SensorPumpPair sensorPumpPair[numberOfIrrigationSystems];
 
     Placement placements[numberOfIrrigationSystems] = {
@@ -53,4 +50,8 @@ public:
     const byte addresses[numberOfIrrigationSystems][2] = {
         {A0, 11},
         {A1, 12}};
+
+    int sensorAirValues[numberOfIrrigationSystems] = {590, 130};
+    int sensorWaterValues[numberOfIrrigationSystems] = {285, 90};
+
 };
