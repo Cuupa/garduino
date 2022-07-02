@@ -9,16 +9,16 @@ from influxdb import InfluxDBClient
 from bs4 import BeautifulSoup
 from datetime import datetime
 
-## Constants
+# Constants
 _utf_8 = 'utf-8'
 
 _weather_config_file = 'weather.config'
 _influx_config_file = 'influx.config'
 
-## weather config constants
+# weather config constants
 _zip_code = 'zip_code'
 
-## Influxdb config file constants
+# Influxdb config file constants
 _influx_host = 'influx_host'
 _influx_port = 'influx_port'
 _influx_username = 'influx_username'
@@ -26,9 +26,9 @@ _influx_password = 'influx_password'
 _influx_database_name = 'influx_database_name'
 
 
-## Payload constants
+# Payload constants
 
-## Requests
+# Requests
 _type = 'type'
 _measurement = 'measurement'
 _request = 'request'
@@ -44,13 +44,43 @@ _sensor_index = 'sensor-index'
 _liter = 'liter'
 _watered = 'watered'
 
-## influx
+# influx
 _tags = 'tags'
 _time = 'time'
 _fields = 'fields'
 
-## agrarwetter
+# agrarwetter
 _agrarwetter_current_conditions_selector = '.MITTEFORMULARSPALTE_WETTER > .SCHRIFT_FORMULAR_WERTE_MITTE'
+_rainfall_selector = 'tr', {'id': 'NS_24H'}
+_evaporation_selector_1 = 'tr', {'id': 'VERDUNST'}
+_evaporation_selector_2 = '.SCHRIFT_FORMULAR_WERTE_MITTE'
+_span = 'span'
+
+_temperature = 'temperature'
+_condition = 'condition'
+_evaporation = 'evaporation'
+_rainfall_today = 'rainfall-today'
+_rainfall_tomorrow = 'rainfall-tomorrow'
+
+_gering = 'gering'
+_maessig = 'mäßig'
+_hoch = 'hoch'
+
+_low = 'low'
+_medium = 'medium'
+_high = 'high'
+
+_sonnig = 'sonnig'
+_heiter = 'heiter'
+_bedeckt = 'bedeckt'
+_wolkig = 'wolkig'
+_stark_bewoelkt = 'stark bewölkt'
+_regen = 'regen'
+_sunny = 'sunny'
+_bright = 'bright'
+_cloudy = 'cloudy'
+_very_cloudy = 'very_cloudy'
+_rain = 'rain'
 
 
 input_device = '/dev/ttyACM0'
@@ -66,7 +96,6 @@ weather_request_header = {
 }
 
 debug = True
-
 
 
 def readWeatherConfig():
@@ -128,6 +157,7 @@ def setup():
     global zip_code
     zip_code = readWeatherConfig()
 
+
 def connect():
     while 1:
         try:
@@ -164,7 +194,7 @@ def listen():
                         debug(response)
                         ser.write(response.encode(_utf_8))
         except IOError as ioe:
-           ser = connect()
+            ser = connect()
         except Exception as e:
             debug(e)
             debug('failed to process ' + message)
@@ -236,45 +266,45 @@ def getWeatherData():
         _agrarwetter_current_conditions_selector)
     data[_time] = current_condition[1].text.replace(
         '.', ':').replace(' Uhr', '')
-    data['temperature'] = current_condition[2].text.replace(',', '.')
-    data['condition'] = getCondition(current_condition[4])
+    data[_temperature] = current_condition[2].text.replace(',', '.')
+    data[_condition] = getCondition(current_condition[4])
 
     # 0 today, 1 tomorrow, etc
-    evaporation = document.find('tr', {'id': 'VERDUNST'}).select(
-        '.SCHRIFT_FORMULAR_WERTE_MITTE')[0].text
-    data['evaporation'] = getEvaporation(evaporation)
+    evaporation = document.find(_evaporation_selector_1).select(
+        _evaporation_selector_2)[0].text
+    data[_evaporation] = getEvaporation(evaporation)
 
-    data['rainfall-today'] = document.find('tr', {'id': 'NS_24H'}).findAll('span')[
+    data[_rainfall_today] = document.find(_rainfall_selector).findAll(_span)[
         1].text.replace(',', '.')
-    data['rainfall-tomorrow'] = document.find(
-        'tr', {'id': 'NS_24H'}).findAll('span')[2].text.replace(',', '.')
+    data[_rainfall_tomorrow] = document.find(
+        _rainfall_selector).findAll(_span)[2].text.replace(',', '.')
 
 
 def getEvaporation(evaporation):
-    if evaporation == 'gering':
-        return 'low'
-    elif evaporation == 'mäßig':
-        return 'medium'
-    elif evaporation == 'hoch':
-        return 'high'
+    if evaporation == _gering:
+        return _low
+    elif evaporation == _maessig:
+        return _medium
+    elif evaporation == _hoch:
+        return _high
 
 
 def getCondition(element):
     condition = element.select('img', alt=True)[0]['alt']
     val = condition.split(':')[1].split()[0]
 
-    if val == 'sonnig':
-        return 'sunny'
-    elif val == 'heiter':
-        return 'bright'
-    elif val == 'bedeckt':
-        return 'cloudy'
-    elif val == 'wolkig':
-        return 'cloudy'
-    elif val == 'stark bewölkt':
-        return 'very cloudy'
-    elif val == 'regen':
-        return 'rain'
+    if val == _sonnig:
+        return _sunny
+    elif val == _heiter:
+        return _bright
+    elif val == _bedeckt:
+        return _cloudy
+    elif val == _wolkig:
+        return _cloudy
+    elif val == _stark_bewoelkt:
+        return _very_cloudy
+    elif val == _regen:
+        return _rain
 
 
 def debug(msg):
