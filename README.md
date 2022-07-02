@@ -57,21 +57,55 @@ If you want to use the software for yourself feel free to change it to match you
 
 
 ### Hygrometers and pumps
-In ```Main.h``` theres a section which probably looks like this:
+In ```IrrigationSystem.h``` theres a section which probably looks like this:
 
 ``` C++
-const byte sensorPumpPair[][2] = {
-    {A0, 13},
-    {A1, 12}
-};
+    static const int numberOfIrrigationSystems = 2;
+
+    SensorPumpPair sensorPumpPair[numberOfIrrigationSystems];
+
+    Placement placements[numberOfIrrigationSystems] = {
+        Placement::OUTSIDE_ROOFED,
+        Placement::INSIDE};
+
+    WaterRequirement waterRequirements[numberOfIrrigationSystems] = {
+        WaterRequirement::HIGH_WATER_REQUIREMENTS,
+        WaterRequirement::MEDIUM_WATER_REQUIREMENTS};
+
+    //  key-value pairs of every sensor-pump-pair
+    //  Each entry will be an irrigation system
+    const byte addresses[numberOfIrrigationSystems][2] = {
+        {A0, 11},
+        {A1, 12}};
+
+    int sensorAirValues[numberOfIrrigationSystems] = {590, 130};
+    int sensorWaterValues[numberOfIrrigationSystems] = {285, 90};
 ```
+The first line is the number of irrigation systems. Unfortunately, I'm a java, not a c++ dev, so I did not manage to find a more elegant solution... yet
+
+Change the number to the number of your irrigation systems, watering loops whatever you call it. Following, there's where you placed your plants and then, what the water requirements are. 
+
+Then, there's the addresses of your sensor-pump-pairs.
 
 The first value of these key-value-pairs is the analog pin which the sensor is connected to, the second value the digital pin, for the pump.
 
-Sensor on ```A0``` activates the pump on pin ```13``` if necessary, sensor on A1 acitvates pump on pin ```12```.
+Sensor on ```A0``` activates the pump on pin ```11``` if necessary, sensor on ```A1``` acitvates pump on pin ```12``` and so on. 
+
+The three fields ```placement```, ```waterRequirements``` and ```addresses``` corresponds one another, so keep attention to the order of your values.
+
+For example sensor-pump-pair number one (or at index 0 to be precise) reads as follows:
+
+Sensor at ```A0```
+
+Pump at ```11```
+
+Placement ```outside-roofed```
+
+Water requirements ```high-water-requirement```
+
 
 ### Relay
-In ```Pump.cpp``` there's an ```initPumps```-Function. The relay I use seems to be off on ```HIGH``` and on on ```LOW```. Depending on the relay you use, you might want to change that.
+In ```Pump.cpp``` there's an ```init```-Function. The relay I use seems to be off on ```HIGH``` and on on ```LOW```. Depending on the relay you use, you might want to change that.
 
 ### Hygrometer calibration
 Depending on your assembly the hygrometers can return different values.
@@ -83,7 +117,7 @@ Open the ```Hygrometer-Calibration.ino``` and change the analog input to the pin
 
 When you start the program, it first measures the "air-value" (so leave the sensor lying on your table or something). Then you have a 5 second pause to place the sensor in a glass of water. It then measures the "water-value" and logs it to the serial console.
 
-Copy these two values and change the two lines ```Hygrometer.h``` accordingly.
+Copy these two values and change the two lines named ```sensorAirValues``` and ```sensorWaterValues``` in file ```IrrigationSystem.h``` accordingly.
 
 ``` C++
 const int sensorAirValues[] = {600, 130};
@@ -94,15 +128,25 @@ In this example I have two sensors. Sensor 1 has an air-value of 600 and a water
 
 Repeat these steps for every sensor you have.
 
+This is neccessary to calculate the moisture percentage.
+
+
 
 ### Water level measurement :construction:
 
-### Weather data :construction:
-If you use a rapsberry pi gateway like I do, there is a directory called ```Raspberry Pi```
-There is a script for setting up your pi. 
+### Communicating with a gateway
+If you use a rapsberry pi gateway like I do, change the ```connectedToServer``` to ```true```. This constant is located in ```Main.h```
 
-Open ```setup_communication.sh```and change the username matching your system. In my case it's called garduino. Then run it on your raspberry pi or just copy and paste it step by step.
+### Weather data
+There is a directory called ```Raspberry Pi``` where are scripts for setting up your pi. Be sure to perform the step at [Communicating with a gateway](#Communicating with a gateway)
+
+Open ```setup_communication.sh```and change the username matching your system. In my case it's called garduino. Then run these steps.
 
 Then copy the ```server.py```, ```influxdb.config``` and ```weather.config``` to your pi to a directoy you might seem fit (like ```/opt/garduino/```). Change the values in the config to match your needs.
 
 As soon you start the ```server.py```(```python3 sever.py```), it listens to any incoming request over serial.
+
+### Grafana monitoring :construction:
+If you want to visualize the data gathered by the sensors there is a script called ```setup_monitoring.sh```.
+
+Set your credentials and run the script to install influxdb and grafana.

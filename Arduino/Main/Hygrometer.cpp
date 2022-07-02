@@ -1,12 +1,19 @@
 #include "Debug.h"
 #include "Hygrometer.h"
 
-int getSensorValueInPercent(int sensorValue, int sensorIndex)
+Hygrometer::Hygrometer(byte address)
 {
-  int airValue = sensorAirValues[sensorIndex];
-  int waterValue = sensorWaterValues[sensorIndex];
-  int value = map(sensorValue, airValue, waterValue, 0, 100);
+  _address = address;
+}
 
+Hygrometer::Hygrometer()
+{
+  _address = 0;
+}
+
+int Hygrometer::getSensorValueInPercent(int sensorValue, int airValue, int waterValue)
+{
+  int value = map(sensorValue, airValue, waterValue, 0, 100);
   if (value > 100)
   {
     return 100;
@@ -21,11 +28,8 @@ int getSensorValueInPercent(int sensorValue, int sensorIndex)
 /*
 The sensor value
 */
-bool isSensorInSoil(float sensorValue, int sensorIndex)
+bool Hygrometer::isSensorInSoil(float sensorValue, int airValue)
 {
-
-  int airValue = sensorAirValues[sensorIndex];
-
   float percent = 0;
   if (airValue > sensorValue)
   {
@@ -42,7 +46,7 @@ bool isSensorInSoil(float sensorValue, int sensorIndex)
   return percent > 2.0;
 }
 
-bool isSensorConnected(float sensorValue)
+bool Hygrometer::isSensorConnected(float sensorValue)
 {
   return sensorValue > 50;
 }
@@ -50,12 +54,12 @@ bool isSensorConnected(float sensorValue)
 /*
   Reads the moisture sensor 100x and returning the average value
 */
-float getMoistureSensorValue(byte sensorPin)
+float Hygrometer::getMoistureSensorValue()
 {
   float sensorValue = 0;
   for (int i = 0; i <= 100; i++)
   {
-    sensorValue += analogRead(sensorPin);
+    sensorValue += analogRead(_address);
     delay(1);
   }
   return sensorValue / 100.0;

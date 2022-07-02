@@ -2,11 +2,86 @@
 
 import serial
 import json
+import requests
+import time
 
 from influxdb import InfluxDBClient
-
 from bs4 import BeautifulSoup
-import requests
+from datetime import datetime
+
+# Constants
+_utf_8 = 'utf-8'
+
+_weather_config_file = 'weather.config'
+_influx_config_file = 'influx.config'
+
+# weather config constants
+_zip_code = 'zip_code'
+
+# Influxdb config file constants
+_influx_host = 'influx_host'
+_influx_port = 'influx_port'
+_influx_username = 'influx_username'
+_influx_password = 'influx_password'
+_influx_database_name = 'influx_database_name'
+
+
+# Payload constants
+
+# Requests
+_type = 'type'
+_measurement = 'measurement'
+_request = 'request'
+_weather_data = 'weather-data'
+
+_water_level = 'water-level'
+_hygrometer_status = 'hygrometer-status'
+_watered_volume = 'watered-volume'
+_hygrometer = 'hygrometer'
+_humidity = 'humidity'
+_system_name = 'system-name'
+_sensor_index = 'sensor-index'
+_liter = 'liter'
+_watered = 'watered'
+
+# influx
+_tags = 'tags'
+_time = 'time'
+_fields = 'fields'
+
+# agrarwetter
+_agrarwetter_current_conditions_selector = '.MITTEFORMULARSPALTE_WETTER > .SCHRIFT_FORMULAR_WERTE_MITTE'
+_rainfall_selector = 'tr', {'id': 'NS_24H'}
+_evaporation_selector_1 = 'tr', {'id': 'VERDUNST'}
+_evaporation_selector_2 = '.SCHRIFT_FORMULAR_WERTE_MITTE'
+_span = 'span'
+
+_temperature = 'temperature'
+_condition = 'condition'
+_evaporation = 'evaporation'
+_rainfall_today = 'rainfall-today'
+_rainfall_tomorrow = 'rainfall-tomorrow'
+
+_gering = 'gering'
+_maessig = 'mäßig'
+_hoch = 'hoch'
+
+_low = 'low'
+_medium = 'medium'
+_high = 'high'
+
+_sonnig = 'sonnig'
+_heiter = 'heiter'
+_bedeckt = 'bedeckt'
+_wolkig = 'wolkig'
+_stark_bewoelkt = 'stark bewölkt'
+_regen = 'regen'
+_sunny = 'sunny'
+_bright = 'bright'
+_cloudy = 'cloudy'
+_very_cloudy = 'very_cloudy'
+_rain = 'rain'
+
 
 input_device = '/dev/ttyACM0'
 
@@ -25,12 +100,12 @@ debug = True
 
 def readWeatherConfig():
     zip = ''
-    with open("influxdb.config") as f:
+    with open(_weather_config_file) as f:
         for line in f:
-            values = line.split("=")
+            values = line.split('=')
             key = values[0].strip()
             value = values[1].strip()
-            if key == 'zip_code':
+            if key == _zip_code:
                 zip = value
     return zip
 
@@ -42,20 +117,20 @@ def readInfluxConfig():
     influx_password = ''
     influx_database_name = ''
 
-    with open("influxdb.config") as f:
+    with open(_influx_config_file) as f:
         for line in f:
-            values = line.split("=")
+            values = line.split('=')
             key = values[0].strip()
             value = values[1].strip()
-            if key == 'influx_host':
+            if key == _influx_host:
                 influx_host = value
-            elif key == 'influx_port':
+            elif key == _influx_port:
                 influx_port = value
-            elif key == 'influx_username':
+            elif key == _influx_username:
                 influx_username = value
-            elif key == 'influx_password':
+            elif key == _influx_password:
                 influx_password = value
-            elif key == 'influx_database_name':
+            elif key == _influx_database_name:
                 influx_database_name = value
 
     return influx_host, influx_port, influx_username, influx_password, influx_database_name
@@ -63,18 +138,18 @@ def readInfluxConfig():
 
 def setup():
     influx_host, influx_port, influx_username, influx_password, influx_database_name = readInfluxConfig()
-
+    global influx_client
     influx_client = InfluxDBClient(host=influx_host,
                                    port=influx_port,
                                    username=influx_username,
                                    password=influx_password,
-                                   ssl=True,
+                                   ssl=False,
                                    verify_ssl=False)
 
     databases = influx_client.get_list_database()
 
     database_exists = next(
-        (item for item in databases if item["name"] == influx_database_name), False)
+        (item for item in databases if item['name'] == influx_database_name), False)
     if not database_exists:
         influx_client.create_database(influx_database_name)
     influx_client.switch_database(influx_database_name)
@@ -83,80 +158,159 @@ def setup():
     zip_code = readWeatherConfig()
 
 
+def connect():
+    while 1:
+        try:
+            ser = serial.Serial(input_device, 9600, timeout=5)
+            ser.reset_input_buffer()
+            return ser
+        except:
+            debug('Device not connected')
+
+
 def listen():
-    ser = serial.Serial(input_device, 9600, timeout=5)
-    ser.reset_input_buffer()
+    ser = connect()
+    debug('listening')
+    while 1:
+        try:
+            if ser.in_waiting > 0:
+                message = ser.readline().decode(_utf_8).rstrip()
+                debug('Received message')
+                debug(message)
+                if "Debug: " in message:
+                    continue
 
-    while True:
-        if ser.in_waiting > 0:
-            message = ser.readline().decode('utf-8').rstrip()
-            payload = json.loads(message)
-            request_type = payload['type']
+                payload = json.loads(message)
+                request_type = payload[_type]
 
-            if request_type == 'measurement':
-                influx_client.write(message)
-            elif request_type == 'request':
-                if payload['request'] == 'weather_data':
-                    weather = getWeatherData()
-                    ser.write(weather.encode('utf-8'))
+                if request_type == _measurement:
+                    json_payload = getData(payload)
+                    influx_client.write_points(json_payload)
+                elif request_type == _request:
+                    if payload[_request] == _weather_data:
+                        weather = getWeatherData()
+                        response = json.dumps(weather)
+                        debug("Response")
+                        debug(response)
+                        ser.write(response.encode(_utf_8))
+        except IOError as ioe:
+            ser = connect()
+        except Exception as e:
+            debug(e)
+            debug('failed to process ' + message)
+
+
+def getData(payload):
+    json_payload = []
+    data = {}
+    if _water_level in payload:
+        data = {
+            _measurement: payload[_system_name],
+            _tags: {
+                _type: _water_level,
+                _sensor_index: int(payload[_sensor_index]),
+                _system_name: payload[_system_name],
+            },
+            _time: datetime.now(),
+            _fields: {
+                _system_name: payload[_system_name],
+                _water_level: float(payload[_water_level]),
+                _liter: float(payload[_liter])
+            }
+        }
+    elif _hygrometer_status in payload:
+        data = {
+            _measurement: payload[_system_name],
+            _tags: {
+                _type: _hygrometer,
+                _sensor_index: int(payload[_sensor_index]),
+                _system_name: payload[_system_name]
+            },
+            _time: datetime.now(),
+            _fields: {
+                _system_name: payload[_system_name],
+                _hygrometer_status: payload[_hygrometer_status],
+                _humidity: float(payload[_humidity]),
+                _sensor_index: int(payload[_sensor_index])
+            }
+        }
+    elif _watered_volume in payload:
+        data = {
+            _measurement: payload[_system_name],
+            _tags: {
+                _type: _watered,
+                _sensor_index: int(payload[_sensor_index]),
+                _system_name: payload[_system_name]
+            },
+            _time: datetime.now(),
+            _fields: {
+                _system_name: payload[_system_name],
+                _watered_volume: float(payload[_watered_volume]),
+                _sensor_index: float(payload[_sensor_index])
+            }
+        }
+    json_payload.append(data)
+    return json_payload
 
 
 def getWeatherData():
     url = weather_url.format(zip_code=zip_code)
     response = requests.get(url, headers=weather_request_header)
     if response.status_code != 200:
-        print("error queueing weather")
+        print('error queueing weather')
         return {}
 
     data = {}
     document = BeautifulSoup(response.content, 'html.parser')
     current_condition = document.select(
-        '.MITTEFORMULARSPALTE_WETTER > .SCHRIFT_FORMULAR_WERTE_MITTE')
-    data['time'] = current_condition[1].text.replace(
+        _agrarwetter_current_conditions_selector)
+    data[_time] = current_condition[1].text.replace(
         '.', ':').replace(' Uhr', '')
-    data['temperature'] = current_condition[2].text.replace(',', '.')
-    data['condition'] = getCondition(current_condition[4])
+    data[_temperature] = current_condition[2].text.replace(',', '.')
+    data[_condition] = getCondition(current_condition[4])
 
     # 0 today, 1 tomorrow, etc
-    evaporation = document.find('tr', {'id': 'VERDUNST'}).select(
-        '.SCHRIFT_FORMULAR_WERTE_MITTE')[0].text
-    data['evaporation'] = getEvaporation(evaporation)
+    evaporation = document.find(_evaporation_selector_1).select(
+        _evaporation_selector_2)[0].text
+    data[_evaporation] = getEvaporation(evaporation)
 
-    data['rainfall-today'] = document.find('tr', {'id': 'NS_24H'}).findAll('span')[
+    data[_rainfall_today] = document.find(_rainfall_selector).findAll(_span)[
         1].text.replace(',', '.')
-    data['rainfall-tomorrow'] = document.find(
-        'tr', {'id': 'NS_24H'}).findAll('span')[2].text.replace(',', '.')
+    data[_rainfall_tomorrow] = document.find(
+        _rainfall_selector).findAll(_span)[2].text.replace(',', '.')
 
 
 def getEvaporation(evaporation):
-    if evaporation == 'gering':
-        return 'low'
-    elif evaporation == 'mäßig':
-        return 'medium'
-    elif evaporation == 'hoch':
-        return 'high'
+    if evaporation == _gering:
+        return _low
+    elif evaporation == _maessig:
+        return _medium
+    elif evaporation == _hoch:
+        return _high
 
 
 def getCondition(element):
     condition = element.select('img', alt=True)[0]['alt']
     val = condition.split(':')[1].split()[0]
 
-    if val == 'sonnig':
-        return 'sunny'
-    elif val == 'heiter':
-        return 'bright'
-    elif val == 'bedeckt':
-        return 'cloudy'
-    elif val == 'wolkig':
-        return 'cloudy'
-    elif val == 'stark bewölkt':
-        return 'very cloudy'
-    elif val == 'regen':
-        return 'rain'
+    if val == _sonnig:
+        return _sunny
+    elif val == _heiter:
+        return _bright
+    elif val == _bedeckt:
+        return _cloudy
+    elif val == _wolkig:
+        return _cloudy
+    elif val == _stark_bewoelkt:
+        return _very_cloudy
+    elif val == _regen:
+        return _rain
+
 
 def debug(msg):
     if debug:
         print(msg)
+
 
 if __name__ == '__main__':
     setup()

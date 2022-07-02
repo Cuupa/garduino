@@ -14,7 +14,7 @@ These two values are needed for the main.ino to determine the correct moisture p
 Change this value to your analog input port you want to use
 */
 const byte sensorAddress = A0;
-
+/*
 
 void setup()
 {

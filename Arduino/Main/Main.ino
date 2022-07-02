@@ -3,60 +3,62 @@
 */
 #include "Message.h"
 #include "Main.h"
-#include "Hygrometer.h"
 #include "Debug.h"
-#include "Pump.h"
 #include "PowerSaving.h"
 #include "WaterLevelMeasurement.h"
-#include "WaterRequirements.h"
 #include "WaterDetermination.h"
-#include "Placement.h"
+#include "IrrigationSystem.h"
 
-int numberOfSensorPumpPairs = -1;
+int numberOfIrrigationSystems = -1;
+
+IrrigationSystem irrigationSystem;
+Message message;
 
 void setup()
 {
   delay(1000);
   Serial.begin(BAUD_RATE);
-  Serial.setTimeout(5000);
+  //Serial.setTimeout(5000);
 
   debug(VERSION_NUMBER);
 
-  numberOfSensorPumpPairs = (sizeof(sensorPumpPair) / sizeof(*sensorPumpPair));
-  debug(String(numberOfSensorPumpPairs) + " Sensor-Pump pairs found");
-
-  initPumps(sensorPumpPair, numberOfSensorPumpPairs);
+  numberOfIrrigationSystems = (sizeof(irrigationSystem.sensorPumpPair) / sizeof(*irrigationSystem.sensorPumpPair));
+  debug(String(numberOfIrrigationSystems) + " Sensor-Pump pairs found");
+  delay(10000);
 }
 
 void loop()
 {
   String weatherData[] = {};
-  request(RequestType::WEATHER_DATA, weatherData);
+  debug("Requesting weather data");
+  message.request(RequestType::WEATHER_DATA, weatherData);
+
+  debug("Received weather data");
+  debug(weatherData);
 
   bool isRaining = isCurrentlyRaining(weatherData);
   bool isRainfallSufficiant = isTodaysAndTomorrowsRainfallSufficient(weatherData);
 
+  debug("It's raining: " +  String(isRaining));
+  debug("Rainfall is sufficiant: " + String(isRainfallSufficiant));
+
   // iterate over every sensor
-  for (int sensorIndex = 0; sensorIndex < numberOfSensorPumpPairs; sensorIndex++)
+  for (int systemIndex = 0; systemIndex < numberOfIrrigationSystems; systemIndex++)
   {
-
-    byte sensorAddress = sensorPumpPair[sensorIndex][0];
-    byte pumpAddress = sensorPumpPair[sensorIndex][1];
-
-    if (isPlantOutside(sensorIndex) && (isRaining || isRainfallSufficiant))
+    if (irrigationSystem.isPlantOutside(systemIndex) && (isRaining || isRainfallSufficiant))
     {
       continue;
     }
 
-    float sensorValue = getMoistureSensorValue(sensorAddress);
+    float sensorValue = irrigationSystem.getMoistureSensorValue(systemIndex);
 
-    if (!isHygrometerOkay(sensorValue, sensorIndex))
+    if (!isHygrometerOkay(sensorValue, systemIndex))
     {
       continue;
     }
 
-    int soilMoisturePercent = getSensorValueInPercent(sensorValue, sensorIndex);
-    sendNotification(HygrometerStatus::HYGROMETER_OK, soilMoisturePercent, sensorIndex);
+    int soilMoisturePercent = irrigationSystem.getSensorValueInPercent(sensorValue, systemIndex);
+    message.sendNotification(HygrometerStatus::HYGROMETER_OK, soilMoisturePercent, systemIndex);
 
     float waterlevel = getWaterLevelInLiter();
     float waterlevelPercentage = convertLiterToPercent(waterlevel);
@@ -67,12 +69,12 @@ void loop()
     }
 
     float waterlevelBefore = waterlevel;
-    while (needsWatering(soilMoisturePercent, HIGH_WATER_REQUIREMENTS))
+    while (irrigationSystem.needsWatering(systemIndex, soilMoisturePercent))
     {
       waterlevel = getWaterLevelInLiter();
       waterlevelPercentage = convertLiterToPercent(waterlevel);
 
-      if (!isHygrometerOkay(sensorValue, sensorIndex))
+      if (!isHygrometerOkay(sensorValue, systemIndex))
       {
         break;
       }
@@ -82,15 +84,15 @@ void loop()
         break;
       }
 
-      pump(2000, pumpAddress);
-      sensorValue = getMoistureSensorValue(sensorAddress);
-      soilMoisturePercent = getSensorValueInPercent(sensorValue, sensorIndex);
+      irrigationSystem.pump(2000, systemIndex);
+      sensorValue = irrigationSystem.getMoistureSensorValue(systemIndex);
+      soilMoisturePercent = irrigationSystem.getSensorValueInPercent(sensorValue, systemIndex);
     }
 
     float newWaterlevel = waterlevel;
     if (newWaterlevel < waterlevelBefore)
     {
-      sendNotification(waterlevelBefore - newWaterlevel, sensorIndex);
+      message.sendNotification(waterlevelBefore - newWaterlevel, systemIndex);
     }
   }
   sleep(60);
@@ -98,15 +100,15 @@ void loop()
 
 bool isHygrometerOkay(float sensorValue, int sensorIndex)
 {
-  if (!isSensorInSoil(sensorValue, sensorIndex))
+  if (!irrigationSystem.isSensorInSoil(sensorValue, sensorIndex))
   {
-    sendNotification(HygrometerStatus::HYGROMETER_OUT_OF_SOIL, sensorValue, sensorIndex);
+    message.sendNotification(HygrometerStatus::HYGROMETER_OUT_OF_SOIL, 0, sensorIndex);
     return false;
   }
 
-  if (!isSensorConnected(sensorValue))
+  if (!irrigationSystem.isSensorConnected(sensorValue))
   {
-    sendNotification(HygrometerStatus::HYGROMETER_NOT_CONNECTED, 0, sensorIndex);
+    message.sendNotification(HygrometerStatus::HYGROMETER_NOT_CONNECTED, 0, sensorIndex);
     return false;
   }
   return true;
@@ -116,24 +118,25 @@ bool isWaterLevelOkay(float waterlevel, float waterlevelPercentage)
 {
   if (isWaterLevelDisabled())
   {
-    sendNotification(Waterlevel::WATER_LEVEL_DISABLED, waterlevel);
+    message.sendNotification(Waterlevel::WATER_LEVEL_DISABLED, waterlevel);
+    return true;
   }
 
   if (isWaterLevelCritical(waterlevelPercentage))
   {
-    sendNotification(Waterlevel::WATER_LEVEL_CRITICAL, waterlevel);
+    message.sendNotification(Waterlevel::WATER_LEVEL_CRITICAL, waterlevel);
     return false;
   }
 
   else if (isWaterLevelLow(waterlevelPercentage))
   {
-    sendNotification(Waterlevel::WATER_LEVEL_LOW, waterlevel);
+    message.sendNotification(Waterlevel::WATER_LEVEL_LOW, waterlevel);
+    return true;
   }
 
   else
   {
-    sendNotification(Waterlevel::WATER_LEVEL_OK, waterlevel);
+    message.sendNotification(Waterlevel::WATER_LEVEL_OK, waterlevel);
+    return true;
   }
-
-  return true;
 }
