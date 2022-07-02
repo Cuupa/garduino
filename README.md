@@ -134,9 +134,11 @@ This is neccessary to calculate the moisture percentage.
 
 ### Water level measurement :construction:
 
+### Communicating with a gateway
+If you use a rapsberry pi gateway like I do, change the ```connectedToServer``` to ```true```. This constant is located in ```Main.h```
+
 ### Weather data
-If you use a rapsberry pi gateway like I do, there is a directory called ```Raspberry Pi```
-There is a script for setting up your pi. 
+There is a directory called ```Raspberry Pi``` where are scripts for setting up your pi. Be sure to perform the step at [Communicating with a gateway](#Communicating with a gateway)
 
 Open ```setup_communication.sh```and change the username matching your system. In my case it's called garduino. Then run these steps.
 
