@@ -184,12 +184,13 @@ def listen():
                 request_type = payload[_type]
 
                 if request_type == _measurement:
-                    json_payload = getData(payload)
+                    json_payload = formatMeasurementDataForInflux(payload)
                     influx_client.write_points(json_payload)
                 elif request_type == _request:
                     if payload[_request] == _weather_data:
                         weather = getWeatherData()
                         response = json.dumps(weather)
+                        formatWeatherDataForInflux(response)
                         debug("Response")
                         debug(response)
                         ser.write(response.encode(_utf_8))
@@ -200,7 +201,10 @@ def listen():
             debug('failed to process ' + message)
 
 
-def getData(payload):
+def formatWeatherDataForInflux(response):
+    pass
+
+def formatMeasurementDataForInflux(payload):
     json_payload = []
     data = {}
     if _water_level in payload:
