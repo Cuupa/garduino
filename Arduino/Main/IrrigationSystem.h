@@ -16,6 +16,13 @@ enum WaterRequirement
     HIGH_WATER_REQUIREMENTS = 20
 };
 
+enum Evaporation
+{
+    LOW_EVAPORATION,
+    MEDIUM_EVAPORATION,
+    HIGH_EVAPORATION
+};
+
 class IrrigationSystem
 {
 public:

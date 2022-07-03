@@ -18,7 +18,7 @@ void setup()
 {
   delay(1000);
   Serial.begin(BAUD_RATE);
-  //Serial.setTimeout(5000);
+  // Serial.setTimeout(5000);
 
   debug(VERSION_NUMBER);
 
@@ -38,8 +38,9 @@ void loop()
 
   bool isRaining = isCurrentlyRaining(weatherData);
   bool isRainfallSufficiant = isTodaysAndTomorrowsRainfallSufficient(weatherData);
+  Evaporation evaporation = getEvaporation(weatherData);
 
-  debug("It's raining: " +  String(isRaining));
+  debug("It's raining: " + String(isRaining));
   debug("Rainfall is sufficiant: " + String(isRainfallSufficiant));
 
   // iterate over every sensor
@@ -95,7 +96,26 @@ void loop()
       message.sendNotification(waterlevelBefore - newWaterlevel, systemIndex);
     }
   }
-  sleep(60);
+
+  int sleepTimeInMinutes = 60;
+  if (evaporation == Evaporation::LOW_EVAPORATION)
+  {
+    // sleep 3h
+    sleepTimeInMinutes = 180;
+  }
+
+  else if (evaporation == Evaporation::MEDIUM_EVAPORATION)
+  {
+    // sleep 1h
+    sleepTimeInMinutes = 60;
+  }
+
+  else if (evaporation == Evaporation::HIGH_EVAPORATION)
+  {
+    // sleep 30 min
+    sleepTimeInMinutes = 30;
+  }
+  sleep(sleepTimeInMinutes);
 }
 
 bool isHygrometerOkay(float sensorValue, int sensorIndex)
@@ -139,4 +159,27 @@ bool isWaterLevelOkay(float waterlevel, float waterlevelPercentage)
     message.sendNotification(Waterlevel::WATER_LEVEL_OK, waterlevel);
     return true;
   }
+}
+
+Evaporation getEvaporation(String weatherData[])
+{
+  if (weatherData[0].equals("ok"))
+  {
+    String evaporationString = weatherData[4];
+    if (evaporationString == "low")
+    {
+      return Evaporation::LOW_EVAPORATION;
+    }
+
+    else if (evaporationString == 'medium')
+    {
+      return Evaporation::MEDIUM_EVAPORATION;
+    }
+    else if (evaporationString == 'high')
+    {
+      return Evaporation::HIGH_EVAPORATION;
+    }
+  }
+  // No data. Returning medium as default
+  return Evaporation::MEDIUM_EVAPORATION;
 }
