@@ -59,7 +59,7 @@ I designed the PCB using [easyeda](https://easyeda.com).
 
 The final circuit board looks something like this:
 
-![img](docs/PCB/PCB.svg){:height="300%" width="300%"}
+<img src="https://raw.githubusercontent.com/Cuupa/garduino/main/docs/PCB/PCB.svg" width="300%" height="300">
 
 All files including Gerber files can be found here: [docs/PCB/](docs/PCB/)
 
