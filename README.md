@@ -3,26 +3,22 @@ This is a personal project done in my spare time. Use at your own risk.
 The amazon links in the hardware section are affiliate links. You still pay the price you normally would, but I get a small commision if you buy something.
 
 :warning: - Pay close attention
+
 :construction: - Under construction. May change frequently and is not stable
+
+# Goal
+Since we don't have a power outlet on our balcony my requirements are that the system will work with a 5V DC Solar panel.
 
 # Hardware
 ## Raspberry Pi 
-I use an old Pi 2 as a gateway to fetch weather data.
-[raspberrypi.com](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/)
+I use an Raspberry Pi Zero W 1.1 as a gateway to fetch weather data.
 
-## Arduino Uno R3
-This is a board for prototyping. It'll be replaces by a arduino micro, when the hardware will be installed on location.
-
-[store.arduino.cc](https://store.arduino.cc/products/arduino-uno-rev3)
+[raspberrypi.com](https://www.raspberrypi.com/products/raspberry-pi-zero/)
 
 ## Arduino Micro
-Board used for production.
+Board used for production. The micro will be soldered to the [PCB](#pcb) and will handle the sensor data and pumps.
+
 [store.arduino.cc](https://store.arduino.cc/products/arduino-micro)
-
-## Elegoo electronic set 
-Be aware you need a seperate 9V power supply if you don't want to power the components via the arduino.
-
-[amazon](https://amzn.to/39TeAqW)
 
 ## WayinTop 3 3V-5V pumps :warning:
 Not the best pumps, but rather cheap and used for prototyping.
@@ -33,6 +29,11 @@ You'd better buy a more expensive one, but I didn't know better and wanted some 
 
 [amazon](https://amzn.to/3OmWYmE)
 
+## 5V DC submergeable pump
+I use this pump as a more reliable pump to water the plants
+
+[amazon](https://amzn.to/3o1D1Gq)
+
 ## Elegoo 4 channel 5V DC relay
 Be aware that LOW seems to activate the relay instead of HIGH. The code is written that way. If you use a different relay, you might want to change that. 
 
@@ -42,6 +43,25 @@ Also see [Changes you probably have to make - Relay](#relay)
 
 ## KeeYees capacitive hygrometers 
 [amazon](https://amzn.to/3OEAihn)
+
+## Waterproof case
+If you use an arduino uno and a standard sized raspberry pi like a Pi 4 this case is definitely to small.
+[amazon](https://amzn.to/3IxMej0)
+
+## Cables
+## USB-extension for the pump.
+Since the pump uses 5V DC over USB and the controller is somewhat far away of the water reservoir and the pump, I use these as an extension cord.
+
+[amazon](https://amzn.to/3P59U0J)
+
+## PCB
+I designed the PCB using [easyeda](https://easyeda.com).
+
+The final circuit board looks something like this:
+
+![img](docs/PCB/PCB.svg)
+
+All files including Gerber files can be found here: [docs/PCB/](docs/PCB/)
 
 
 # Software
