@@ -72,6 +72,7 @@ _high = 'high'
 
 _sonnig = 'sonnig'
 _heiter = 'heiter'
+_klar = 'klar'
 _bedeckt = 'bedeckt'
 _wolkig = 'wolkig'
 _stark_bewoelkt = 'stark bewölkt'
@@ -299,7 +300,7 @@ def getCondition(element):
 
     if val == _sonnig:
         return _sunny
-    elif val == _heiter:
+    elif val == _heiter or val == _klar:
         return _bright
     elif val == _bedeckt:
         return _cloudy
