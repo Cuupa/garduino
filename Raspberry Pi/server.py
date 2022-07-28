@@ -9,11 +9,13 @@ from influxdb import InfluxDBClient
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+from os.path import exists
+
 # Constants
 _utf_8 = 'utf-8'
 
 _weather_config_file = 'weather.config'
-_influx_config_file = 'influx.config'
+_influx_config_file = 'influxdb.config'
 
 # weather config constants
 _zip_code = 'zip_code'
@@ -101,6 +103,10 @@ debug = True
 
 def readWeatherConfig():
     zip = ''
+    
+    if not exists(_weather_config_file):
+        error(_weather_config_file + ' does not exist.')
+
     with open(_weather_config_file) as f:
         for line in f:
             values = line.split('=')
@@ -117,6 +123,9 @@ def readInfluxConfig():
     influx_username = ''
     influx_password = ''
     influx_database_name = ''
+
+    if not exists(_influx_config_file):
+        error(_influx_config_file + 'does not exist.')
 
     with open(_influx_config_file) as f:
         for line in f:
@@ -139,22 +148,27 @@ def readInfluxConfig():
 
 def setup():
     influx_host, influx_port, influx_username, influx_password, influx_database_name = readInfluxConfig()
-    global influx_client
-    influx_client = InfluxDBClient(host=influx_host,
-                                   port=influx_port,
-                                   username=influx_username,
-                                   password=influx_password,
-                                   ssl=False,
-                                   verify_ssl=False)
 
-    databases = influx_client.get_list_database()
+    if not influx_host:
+        try:
+            global influx_client
+            influx_client = InfluxDBClient(host=influx_host,
+                                    port=influx_port,
+                                    username=influx_username,
+                                    password=influx_password,
+                                    ssl=False,
+                                    verify_ssl=False)
 
-    database_exists = next(
-        (item for item in databases if item['name'] == influx_database_name), False)
-    if not database_exists:
-        influx_client.create_database(influx_database_name)
-    influx_client.switch_database(influx_database_name)
+            databases = influx_client.get_list_database()
 
+            database_exists = next((item for item in databases if item['name'] == influx_database_name), False)
+            
+            if not database_exists:
+                influx_client.create_database(influx_database_name)
+            influx_client.switch_database(influx_database_name)
+        except ConnectionError as ce:
+            error('Could not connect to influxdb')
+            error(ce)
     global zip_code
     zip_code = readWeatherConfig()
 
@@ -185,8 +199,9 @@ def listen():
                 request_type = payload[_type]
 
                 if request_type == _measurement:
-                    json_payload = formatMeasurementDataForInflux(payload)
-                    influx_client.write_points(json_payload)
+                    if influx_client is not None:
+                        json_payload = formatMeasurementDataForInflux(payload)
+                        influx_client.write_points(json_payload)
                 elif request_type == _request:
                     if payload[_request] == _weather_data:
                         weather = getWeatherData()
@@ -316,6 +331,8 @@ def debug(msg):
     if debug:
         print(msg)
 
+def error(msg):
+    print(msg)
 
 if __name__ == '__main__':
     setup()
