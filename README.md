@@ -62,7 +62,7 @@ The final circuit board looks something like this:
 <img src="https://raw.githubusercontent.com/Cuupa/garduino/main/docs/PCB/PCB.svg" width="300%" height="300">
 
 All files including Gerber files can be found here: [docs/PCB/](docs/PCB/)
-
+I had to order at least 5 PCBs which costs me around 8$ (including shipping).
 
 # Software
 The software in this git repository is as of now a simple prototype and is under active development.
